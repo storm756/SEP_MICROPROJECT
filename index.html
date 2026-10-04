@@ -1,0 +1,46 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CityServe - Smart City Service Application</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#1c2733;--mut:#6b7a89;--pri:#0b6bcb;--bd:#dde3ea}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:#0b3a6e;color:#fff;padding:14px 24px}header h1{margin:0;font-size:20px}header small{opacity:.8}
+main{max-width:1100px;margin:20px auto;padding:0 16px;display:grid;gap:16px;grid-template-columns:320px 1fr}
+@media(max-width:800px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px}
+h2{margin:0 0 10px;font-size:16px}label{display:block;font-size:12px;color:var(--mut);margin:8px 0 2px}
+input,select,textarea,button{width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;font:inherit}
+button{background:var(--pri);color:#fff;border:0;cursor:pointer;margin-top:12px}button.sm{width:auto;margin:0;padding:4px 10px;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stat{background:#eef4fb;border-radius:8px;padding:10px;text-align:center}.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:var(--mut)}
+.issue{border:1px solid var(--bd);border-radius:8px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:#e8edf3;margin-right:4px}
+.Critical{background:#fde0e0;color:#a10}.High{background:#ffe9cc;color:#a50}.Medium{background:#fff6c7;color:#760}.Low{background:#dff5e1;color:#164}
+.row{display:flex;gap:8px;margin-bottom:10px}.err{color:#b00020;font-size:13px;margin-top:8px}
+</style></head><body>
+<header><h1>CityServe</h1><small>Smart City Service Application · SDG 9 / SDG 11</small></header>
+<main>
+<section class="card"><h2>Report an issue</h2>
+<label>Title</label><input id="title">
+<label>Category</label><select id="category"></select>
+<label>Location</label><input id="location" placeholder="e.g. Ward 12, Link Road">
+<label>Severity</label><select id="severity"><option>low</option><option selected>medium</option><option>high</option></select>
+<label>People affected</label><input id="affected" type="number" min="1" value="5">
+<label>Description</label><textarea id="description" rows="3"></textarea>
+<button onclick="submitIssue()">Submit report</button><div id="err" class="err"></div></section>
+<section><div class="stats" id="stats"></div>
+<div class="card"><h2>Issues (sorted by priority)</h2>
+<div class="row"><select id="fstatus" onchange="load()"><option value="">All statuses</option><option>Reported</option><option>Assigned</option><option>In Progress</option><option>Resolved</option></select></div>
+<div id="list"></div></div></section></main>
+<script>
+const S=["Reported","Assigned","In Progress","Resolved"];const $=i=>document.getElementById(i);
+async function api(u,o){const r=await fetch(u,o);return{ok:r.ok,data:await r.json()}}
+async function init(){const c=(await api('/api/categories')).data;$('category').innerHTML=Object.keys(c).map(k=>`<option value="${k}">${k.replace('_',' ')} → ${c[k].department}</option>`).join('');load()}
+async function submitIssue(){const b={};['title','category','location','severity','description'].forEach(k=>b[k]=$(k).value);b.affected=$('affected').value;
+const r=await api('/api/issues',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+$('err').textContent=r.ok?'':(r.data.errors||[]).join(', ');if(r.ok){$('title').value='';$('location').value='';$('description').value='';load()}}
+async function move(id,s){await api(`/api/issues/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:s})});load()}
+async function load(){const f=$('fstatus').value;const[l,s]=await Promise.all([api('/api/issues'+(f?`?status=${f}`:'')),api('/api/stats')]);const t=s.data;
+$('stats').innerHTML=[['Total',t.total],['Open',t.open],['Resolved',t.resolved],['Critical open',t.critical_open]].map(x=>`<div class="stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+$('list').innerHTML=l.data.map(i=>{const n=S[S.indexOf(i.status)+1];return`<div class="issue"><div><b>${i.title}</b><br><span class="tag ${i.priority_label}">${i.priority_label} (${i.priority})</span><span class="tag">${i.department}</span><span class="tag">${i.status}</span><br><small>${i.location} · ${i.affected} affected · SLA ${i.sla_hours}h</small></div>${n?`<button class="sm" onclick="move(${i.id},'${n}')">→ ${n}</button>`:''}</div>`}).join('')||'<p>No issues.</p>'}
+init();
+</script></body></html>

@@ -1,0 +1,23 @@
+Issue Id,Parent Id,Issue Type,Summary,Description,Priority,Story Points,Sprint,Labels
+E1,,Epic,Requirements & Planning,"Elicit requirements, model them in UML, plan with Gantt/PERT.",Medium,,,epic
+E2,,Epic,Citizen Reporting,"Citizens can report civic issues with category, location, severity.",Medium,,,epic
+E3,,Epic,Prioritisation & Workflow,"Auto-priority scoring, department routing, status workflow.",Medium,,,epic
+E4,,Epic,"Dashboard, Testing & Release","Dashboard stats, automated tests, demo and documentation.",Medium,,,epic
+S1,E1,Story,Create project charter and scope statement,"Document problem, scope, SDG 9/11 alignment.",High,2,Sprint 1,planning
+S2,E1,Story,Draw use case diagram,"Actors: Citizen, City Officer, Admin.",High,2,Sprint 1,uml
+S3,E1,Story,Draw class and sequence diagrams,"Model Issue, Category, Department; report-issue sequence.",Medium,3,Sprint 1,uml
+S4,E1,Story,Create Gantt chart and PERT network,"Schedule tasks, dependencies and critical path.",Medium,3,Sprint 1,gantt
+S5,E1,Story,Define product backlog and sprint plan,"Backlog in Jira, 3 sprints.",High,2,Sprint 1,agile
+S6,E2,Story,"As a citizen, I can report an issue","Form with title, category, location, severity, people affected.",Highest,5,Sprint 1,feature
+S7,E2,Story,Validate report inputs,"Reject missing title/location, invalid category, non-positive affected count.",High,3,Sprint 1,feature
+S8,E2,Story,Persist reports in SQLite,Issues table with timestamps.,High,3,Sprint 1,backend
+S9,E3,Story,"As the system, I compute a priority score","Base urgency + severity + reach, capped at 10.",Highest,5,Sprint 2,feature
+S10,E3,Story,Route issue to the responsible department,Category-to-department mapping with SLA hours.,High,3,Sprint 2,feature
+S11,E3,Story,"As an officer, I can advance issue status",Reported > Assigned > In Progress > Resolved; no skipping.,Highest,5,Sprint 2,feature
+S12,E3,Story,List issues sorted by priority with filters,"Filter by status, category, department.",High,3,Sprint 2,feature
+S13,E3,Story,Build web UI for reporting and tracking,Single-page responsive UI.,High,5,Sprint 2,frontend
+S14,E4,Story,"As an admin, I see a statistics dashboard","Totals, open, resolved, critical open.",Medium,3,Sprint 3,feature
+S15,E4,Story,Write automated unit and API tests,"20 test cases, coverage report.",Highest,5,Sprint 3,testing
+S16,E4,Story,Security check: SQL injection and input handling,Parameterised queries verified by test.,High,2,Sprint 3,testing
+S17,E4,Story,Record demo video and publish on LinkedIn,Working-model walkthrough.,High,2,Sprint 3,release
+S18,E4,Story,Sprint retrospective and report,"Velocity, burndown, lessons learned.",Medium,2,Sprint 3,agile

@@ -1,0 +1,14 @@
+test_app.py::test_TC17_empty_body_400 PASSED                             [ 85%]
+test_app.py::test_TC18_ui_served PASSED                                  [ 90%]
+test_app.py::test_TC19_sql_injection_filter_safe PASSED                  [ 95%]
+test_app.py::test_TC20_categories_endpoint PASSED                        [100%]
+
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.3-final-0 ________________
+
+Name     Stmts   Miss  Cover   Missing
+--------------------------------------
+app.py      95      1    99%   137
+--------------------------------------
+TOTAL       95      1    99%
+============================== 20 passed in 0.53s ==============================

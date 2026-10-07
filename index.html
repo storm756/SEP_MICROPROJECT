@@ -33,7 +33,66 @@ button{background:var(--pri);color:#fff;border:0;cursor:pointer;margin-top:12px}
 <div id="list"></div></div></section></main>
 <script>
 const S=["Reported","Assigned","In Progress","Resolved"];const $=i=>document.getElementById(i);
-async function api(u,o){const r=await fetch(u,o);return{ok:r.ok,data:await r.json()}}
+const CATEGORIES_DATA={
+  "water_leak":{department:"Water Dept",base:4,sla_hours:24},
+  "power_outage":{department:"Electricity Dept",base:5,sla_hours:12},
+  "pothole":{department:"Roads Dept",base:3,sla_hours:72},
+  "streetlight":{department:"Electricity Dept",base:2,sla_hours:96},
+  "waste":{department:"Sanitation Dept",base:3,sla_hours:48},
+  "traffic":{department:"Traffic Police",base:4,sla_hours:24}
+};
+const SEVERITY_BONUS={low:0,medium:1,high:2};
+const DEFAULT_ISSUES=[
+  {id:1,title:'Severe Main Pipe Leak',category:'water_leak',location:'Ward 4, MG Road near City Hospital',severity:'high',affected:150,description:'High pressure drinking water pipe burst flooding road.',priority:9,priority_label:'Critical',department:'Water Dept',status:'Assigned',sla_hours:24},
+  {id:2,title:'Traffic Signal Outage at Junction 7',category:'traffic',location:'Sector 12 / Central Avenue Crossing',severity:'high',affected:250,description:'Signal system completely down during peak rush hour.',priority:9,priority_label:'Critical',department:'Traffic Police',status:'Reported',sla_hours:24},
+  {id:3,title:'Deep Pothole Causing Vehicle Damage',category:'pothole',location:'North Ring Road near Exit 3',severity:'medium',affected:45,description:'Pothole approximately 15cm deep posing hazard.',priority:5,priority_label:'Medium',department:'Roads Dept',status:'In Progress',sla_hours:72},
+  {id:4,title:'Garbage Overflow at Community Bin',category:'waste',location:'Ward 9, Market Complex Area',severity:'medium',affected:80,description:'Municipal collection bin unemptied for 3 days.',priority:5,priority_label:'Medium',department:'Sanitation Dept',status:'Reported',sla_hours:48},
+  {id:5,title:'Flickering Streetlights',category:'streetlight',location:'Ward 2, Green Park Avenue',severity:'low',affected:15,description:'Three consecutive lampposts blinking intermittently.',priority:3,priority_label:'Low',department:'Electricity Dept',status:'Resolved',sla_hours:96}
+];
+let useLocalMock=false;
+let localIssues=JSON.parse(localStorage.getItem('cityserve_issues')||'null')||DEFAULT_ISSUES;
+function saveLocal(){try{localStorage.setItem('cityserve_issues',JSON.stringify(localIssues))}catch(e){}}
+function computePriority(c,s,a){const b=(CATEGORIES_DATA[c]||{}).base||3;const r=a>=100?2:(a>=10?1:0);return Math.min(10,b+(SEVERITY_BONUS[s]||0)+r+(s==="high"?1:0))}
+function label(p){return p>=8?"Critical":p>=6?"High":p>=4?"Medium":"Low"}
+
+async function api(u,o){
+  if(useLocalMock)return mockApi(u,o);
+  try{
+    const r=await fetch(u,o);
+    if(!r.ok&&u.includes('/api/categories'))throw new Error('API unavailable');
+    return{ok:r.ok,data:await r.json()};
+  }catch(e){
+    useLocalMock=true;
+    return mockApi(u,o);
+  }
+}
+
+function mockApi(u,o){
+  if(u.includes('/api/categories'))return{ok:true,data:CATEGORIES_DATA};
+  if(u.includes('/api/issues')&&(!o||o.method==='GET'||!o.method)){
+    let f=[...localIssues];const m=u.match(/status=([^&]+)/);
+    if(m)f=f.filter(i=>i.status===decodeURIComponent(m[1]));
+    f.sort((a,b)=>b.priority-a.priority);return{ok:true,data:f};
+  }
+  if(u.includes('/api/stats')){
+    const op=localIssues.filter(i=>i.status!=='Resolved');
+    return{ok:true,data:{total:localIssues.length,open:op.length,resolved:localIssues.length-op.length,critical_open:op.filter(i=>i.priority_label==='Critical').length}};
+  }
+  if(u.includes('/status')&&o&&o.method==='PATCH'){
+    const id=parseInt(u.split('/api/issues/')[1].split('/status')[0]);
+    const b=JSON.parse(o.body||'{}');const it=localIssues.find(i=>i.id===id);
+    if(it){it.status=b.status;saveLocal();return{ok:true,data:it};}
+    return{ok:false,data:{error:'not found'}};
+  }
+  if(u.includes('/api/issues')&&o&&o.method==='POST'){
+    const b=JSON.parse(o.body||'{}');const aff=parseInt(b.affected||1);
+    const p=computePriority(b.category,b.severity,aff);
+    const it={id:Date.now(),title:b.title,category:b.category,location:b.location,severity:b.severity,affected:aff,description:b.description||'',priority:p,priority_label:label(p),department:(CATEGORIES_DATA[b.category]||{}).department||'City Dept',status:'Reported',sla_hours:(CATEGORIES_DATA[b.category]||{}).sla_hours||48};
+    localIssues.unshift(it);saveLocal();return{ok:true,data:it};
+  }
+  return{ok:true,data:{}};
+}
+
 async function init(){const c=(await api('/api/categories')).data;$('category').innerHTML=Object.keys(c).map(k=>`<option value="${k}">${k.replace('_',' ')} → ${c[k].department}</option>`).join('');load()}
 async function submitIssue(){const b={};['title','category','location','severity','description'].forEach(k=>b[k]=$(k).value);b.affected=$('affected').value;
 const r=await api('/api/issues',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});

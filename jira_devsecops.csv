@@ -1,0 +1,25 @@
+Issue Id,Issue Type,Summary,Description,Parent,Story Points,Sprint
+101,Epic,Source & Containerisation,,,,
+102,Epic,CI/CD Pipeline (Jenkins),,,,
+103,Epic,Security Scanning (SonarQube & Trivy),,,,
+104,Epic,Infrastructure as Code (Terraform & AWS),,,,
+105,Epic,Documentation & Evidence,,,,
+201,Story,Prepare CityServe for production (gunicorn + wsgi.py),Add wsgi.py and gunicorn so the app runs outside Flask's dev server,101,3,DevSecOps Sprint 1
+202,Story,"Write Dockerfile (non-root user, healthcheck)","Slim Python base image, unprivileged user, HEALTHCHECK, volume for SQLite",101,3,DevSecOps Sprint 1
+203,Story,Build and run the image locally,"docker build, docker run, open the site on localhost:8000",101,2,DevSecOps Sprint 1
+204,Story,Add .dockerignore and pin dependencies,"Keep tests, DB and secrets out of the image; pin Flask and gunicorn",101,2,DevSecOps Sprint 1
+205,Story,Run Jenkins and SonarQube with docker-compose,"Custom Jenkins image with docker CLI, Trivy and sonar-scanner",102,3,DevSecOps Sprint 1
+206,Story,"Write Jenkinsfile: checkout, install, test",Declarative pipeline running pytest with coverage,102,3,DevSecOps Sprint 1
+207,Story,Add Docker build and deploy stages with smoke test,"Build image, run container, wait for healthy status",102,3,DevSecOps Sprint 1
+208,Story,Store tokens as Jenkins credentials,sonar-token and dockerhub-creds; no secrets in Git,102,2,DevSecOps Sprint 1
+209,Story,Run SonarQube analysis with quality gate,"Project cityserve, coverage.xml imported",103,3,DevSecOps Sprint 2
+210,Story,Trivy scan of dependencies and secrets,trivy fs on the repository,103,2,DevSecOps Sprint 2
+211,Story,Trivy scan of the Docker image,Report plus CRITICAL gate,103,2,DevSecOps Sprint 2
+212,Story,Fix findings and re-scan,"Upgrade packages or code, show before/after",103,5,DevSecOps Sprint 2
+213,Story,Write the basic vulnerability report,"Issue, severity, threat, fix, screenshots",103,3,DevSecOps Sprint 2
+214,Story,Terraform network and security group,"VPC, subnet, IGW, route table, SG",104,3,DevSecOps Sprint 2
+215,Story,Terraform EC2 instance with user_data,"IMDSv2, encrypted disk, runs the container",104,3,DevSecOps Sprint 2
+216,Story,Scan Terraform with Trivy; plan/apply/destroy,Evidence of apply and destroy,104,3,DevSecOps Sprint 2
+217,Story,Draw architecture and CI/CD diagrams,Graphviz or Draw.io,105,2,DevSecOps Sprint 2
+218,Story,Record demo video and post on LinkedIn,No credentials visible,105,2,DevSecOps Sprint 2
+219,Story,Finish report and presentation,Insert screenshots and links,105,3,DevSecOps Sprint 2

@@ -30,7 +30,7 @@ def label(score):
 
 def create_app(db_path=None):
     app = Flask(__name__, static_folder="static")
-    app.config["DB"] = db_path or os.path.join(os.path.dirname(__file__), "cityserve.db")
+    app.config["DB"] = db_path or os.environ.get("CITYSERVE_DB") or os.path.join(os.path.dirname(__file__), "cityserve.db")
 
     def db():
         if "db" not in g:

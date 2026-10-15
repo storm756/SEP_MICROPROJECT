@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%" style="background:#0f172a; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <defs>
+    <linearGradient id="gradVpc" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="gradBox" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="gradSec" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Title -->
+  <text x="500" y="45" text-anchor="middle" fill="#f8fafc" font-size="24" font-weight="700" letter-spacing="1">CityServe - Production Application Architecture (AWS / Docker)</text>
+  <text x="500" y="72" text-anchor="middle" fill="#94a3b8" font-size="14">Secure Civic Grievance Triage System • Aligned with UN SDG 9 (Infrastructure &amp; Innovation)</text>
+
+  <!-- User / Citizen Node -->
+  <rect x="50" y="240" width="140" height="110" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="120" cy="280" r="20" fill="#0284c7"/>
+  <text x="120" y="286" text-anchor="middle" fill="#ffffff" font-size="18">👤</text>
+  <text x="120" y="322" text-anchor="middle" fill="#f8fafc" font-size="14" font-weight="600">Citizen Client</text>
+  <text x="120" y="340" text-anchor="middle" fill="#94a3b8" font-size="11">Browser / Mobile (HTTP)</text>
+
+  <!-- Arrow to IGW -->
+  <line x1="190" y1="295" x2="260" y2="295" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="6,4"/>
+  <polygon points="260,290 270,295 260,300" fill="#38bdf8"/>
+  <text x="225" y="285" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="600">Port 80</text>
+
+  <!-- AWS Cloud Boundary -->
+  <rect x="250" y="110" width="710" height="440" rx="16" fill="url(#gradVpc)" stroke="#f59e0b" stroke-width="2" stroke-dasharray="8,6" filter="url(#shadow)"/>
+  <rect x="270" y="95" width="220" height="30" rx="6" fill="#f59e0b"/>
+  <text x="380" y="115" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="700">AWS Cloud (ap-south-1 Mumbai)</text>
+
+  <!-- Internet Gateway -->
+  <rect x="280" y="250" width="90" height="90" rx="10" fill="#334155" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="325" y="288" text-anchor="middle" fill="#ffffff" font-size="22">🌐</text>
+  <text x="325" y="312" text-anchor="middle" fill="#f8fafc" font-size="12" font-weight="600">Internet GW</text>
+  <text x="325" y="328" text-anchor="middle" fill="#94a3b8" font-size="10">0.0.0.0/0</text>
+
+  <!-- Route to Subnet -->
+  <line x1="370" y1="295" x2="430" y2="295" stroke="#38bdf8" stroke-width="2.5"/>
+  <polygon points="430,290 440,295 430,300" fill="#38bdf8"/>
+
+  <!-- Public Subnet Boundary -->
+  <rect x="420" y="150" width="510" height="370" rx="12" fill="#0f172a" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <rect x="440" y="138" width="210" height="24" rx="4" fill="#0ea5e9"/>
+  <text x="545" y="154" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="600">Public Subnet (10.20.1.0/24)</text>
+
+  <!-- Security Group -->
+  <rect x="450" y="180" width="455" height="320" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+  <rect x="465" y="170" width="220" height="20" rx="4" fill="#10b981"/>
+  <text x="575" y="184" text-anchor="middle" fill="#0f172a" font-size="11" font-weight="700">Security Group: cityserve-web-sg</text>
+
+  <!-- EC2 Instance -->
+  <rect x="475" y="215" width="405" height="260" rx="8" fill="#0f172a" stroke="#64748b" stroke-width="1.5"/>
+  <text x="495" y="240" fill="#f8fafc" font-size="13" font-weight="700">EC2: t2.micro (Amazon Linux 2023 / IMDSv2 Encrypted GP3)</text>
+
+  <!-- Docker Container Box -->
+  <rect x="495" y="255" width="365" height="200" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="510" y="247" width="180" height="18" rx="3" fill="#3b82f6"/>
+  <text x="600" y="260" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="700">Docker: cityserve:latest</text>
+
+  <!-- Unprivileged user badge -->
+  <rect x="710" y="247" width="135" height="18" rx="3" fill="#6366f1"/>
+  <text x="777" y="260" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="600">USER: appuser (10001)</text>
+
+  <!-- Inside Container: Gunicorn + Flask + SQLite -->
+  <!-- Gunicorn -->
+  <rect x="515" y="280" width="145" height="60" rx="6" fill="#334155" stroke="#94a3b8" stroke-width="1"/>
+  <text x="587" y="305" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">Gunicorn WSGI</text>
+  <text x="587" y="325" text-anchor="middle" fill="#38bdf8" font-size="11">2 Worker Processes</text>
+
+  <!-- Flask App -->
+  <rect x="685" y="280" width="155" height="60" rx="6" fill="#334155" stroke="#94a3b8" stroke-width="1"/>
+  <text x="762" y="305" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">Flask REST Engine</text>
+  <text x="762" y="325" text-anchor="middle" fill="#a7f3d0" font-size="11">Math Priority &amp; SLA FSM</text>
+
+  <line x1="660" y1="310" x2="685" y2="310" stroke="#94a3b8" stroke-width="2"/>
+
+  <!-- Volume / Data -->
+  <rect x="515" y="360" width="325" height="75" rx="6" fill="#1e1e2e" stroke="#f43f5e" stroke-width="1.5"/>
+  <text x="530" y="385" fill="#f43f5e" font-size="12" font-weight="700">💾 Docker Volume: /data</text>
+  <text x="530" y="405" fill="#f8fafc" font-size="11">SQLite Persistence (cityserve.db) • Read/Write isolated from /app code</text>
+  <text x="530" y="423" fill="#94a3b8" font-size="10">Automated Healthcheck: GET /api/categories (every 15s)</text>
+</svg>

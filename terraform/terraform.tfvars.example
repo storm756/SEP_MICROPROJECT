@@ -1,0 +1,11 @@
+# Example Terraform variables
+aws_region        = "ap-south-1"
+instance_type     = "t2.micro"
+name_prefix       = "cityserve"
+docker_image      = "storm756/cityserve:latest"
+allowed_http_cidr = "0.0.0.0/0"
+ssh_cidr          = "" # Set to your IP (e.g. "203.0.113.50/32") if SSH is needed
+
+# Set to true if validating with a local AWS emulator (Floci/LocalStack)
+use_emulator      = false
+emulator_endpoint = "http://localhost:4566"

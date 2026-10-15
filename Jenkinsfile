@@ -53,7 +53,9 @@ pipeline {
           sh '''
             sonar-scanner \
               -Dsonar.host.url="$SONAR_HOST_URL" \
+              -Dsonar.login="$SONAR_TOKEN" \
               -Dsonar.token="$SONAR_TOKEN" \
+              -Dsonar.projectKey=CityServe \
               -Dsonar.qualitygate.wait=false
           '''
         }

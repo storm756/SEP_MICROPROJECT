@@ -35,9 +35,9 @@ variable "allowed_http_cidr" {
 }
 
 variable "ssh_cidr" {
-  description = "CIDR block allowed for SSH access (Port 22) - empty disables SSH"
+  description = "CIDR block allowed for SSH access (Port 22)"
   type        = string
-  default     = ""
+  default     = "0.0.0.0/0"
 }
 
 variable "docker_image" {

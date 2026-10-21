@@ -10,8 +10,9 @@ unzip -q /tmp/awscliv2.zip -d /tmp
 /tmp/aws/install --update
 rm -rf /tmp/aws /tmp/awscliv2.zip
 
-# Step 2: Start Docker service
+# Step 2: Start Docker service and configure user permissions
 systemctl enable --now docker
+usermod -aG docker ubuntu
 
 # Step 3: Login to AWS ECR
 export AWS_ACCESS_KEY_ID="${aws_access_key_id}"

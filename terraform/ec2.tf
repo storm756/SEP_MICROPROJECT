@@ -19,10 +19,17 @@ locals {
   ami = var.ami_id != "" ? var.ami_id : (var.use_emulator ? "ami-12345678" : data.aws_ami.ubuntu[0].id)
 }
 
+# SSH Key Pair for EC2 access
+resource "aws_key_pair" "ssh_key" {
+  key_name   = "${var.name_prefix}-key"
+  public_key = file("${path.module}/cityserve-key.pub")
+}
+
 # EC2 Instance provisioning CityServe container
 resource "aws_instance" "web" {
   ami                         = local.ami
   instance_type               = var.instance_type
+  key_name                    = aws_key_pair.ssh_key.key_name
   subnet_id                   = aws_subnet.public.id
   vpc_security_group_ids      = [aws_security_group.web.id]
   associate_public_ip_address = true

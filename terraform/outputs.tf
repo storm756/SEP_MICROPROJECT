@@ -17,3 +17,8 @@ output "app_url" {
   description = "The public HTTP URL of the CityServe application"
   value       = "http://${aws_instance.web.public_ip}"
 }
+
+output "ssh_command" {
+  description = "Command to SSH into the EC2 instance"
+  value       = "ssh -i terraform/cityserve-key.pem ubuntu@${aws_instance.web.public_ip}"
+}

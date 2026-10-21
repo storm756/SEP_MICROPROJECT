@@ -1,18 +1,35 @@
 #!/bin/bash
 set -euo pipefail
 
-# System update and Docker installation
-dnf update -y || apt-get update -y
-dnf install -y docker || apt-get install -y docker.io
+# System update, Docker and Git installation
+if command -v dnf &>/dev/null; then
+    dnf update -y
+    dnf install -y docker git
+else
+    apt-get update -y
+    apt-get install -y docker.io git
+fi
 
 # Enable and start Docker service
 systemctl enable --now docker
 
-# Pull and run the CityServe Docker container
-docker pull ${docker_image}
-docker run -d \
-  --name cityserve \
-  --restart unless-stopped \
-  -p 80:8000 \
-  -v cityserve_data:/data \
-  ${docker_image}
+# Deploy CityServe container (via registry or direct Git clone fallback)
+if docker pull ${docker_image} 2>/dev/null; then
+    docker run -d \
+      --name cityserve \
+      --restart unless-stopped \
+      -p 80:8000 \
+      -v cityserve_data:/data \
+      ${docker_image}
+else
+    cd /opt
+    git clone https://github.com/storm756/SEP_MICROPROJECT.git
+    cd SEP_MICROPROJECT
+    docker build -t cityserve:latest .
+    docker run -d \
+      --name cityserve \
+      --restart unless-stopped \
+      -p 80:8000 \
+      -v cityserve_data:/data \
+      cityserve:latest
+fi

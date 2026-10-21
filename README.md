@@ -1,16 +1,105 @@
 # 🏙️ CityServe - Smart City Civic Service Application
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Flask-3.1-black?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
-[![SQLite](https://img.shields.io/badge/Database-SQLite3-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![Tests](https://img.shields.io/badge/Pytest-20%2F20%20Passed-brightgreen?logo=pytest&logoColor=white)](test_app.py)
-[![Coverage](https://img.shields.io/badge/Coverage-99%25-brightgreen)](test_results_summary.txt)
-[![Agile](https://img.shields.io/badge/Methodology-Scrum%20%2F%20Agile-orange?logo=jira&logoColor=white)](jira_import.csv)
-[![SDG 9](https://img.shields.io/badge/UN%20SDG-9%20Industry%20%26%20Infrastructure-FD6925)](https://sdgs.un.org/goals/goal9)
-[![SDG 11](https://img.shields.io/badge/UN%20SDG-11%20Sustainable%20Cities-F99D26)](https://sdgs.un.org/goals/goal11)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white)](Dockerfile)
+[![Jenkins](https://img.shields.io/badge/Jenkins-CI%2FCD%20Pipeline-D24939?logo=jenkins&logoColor=white)](Jenkinsfile)
+[![SonarQube](https://img.shields.io/badge/SonarQube-Quality%20Gate%20Passed-4E9BCD?logo=sonarqube&logoColor=white)](http://localhost:9000)
+[![Trivy](https://img.shields.io/badge/Trivy-Vulnerability%20Scanned-1D63ED?logo=aquasec&logoColor=white)](Jenkinsfile)
+[![Terraform](https://img.shields.io/badge/Terraform-IaC%20(AWS)-844FBA?logo=terraform&logoColor=white)](terraform/)
+[![AWS](https://img.shields.io/badge/AWS-EC2%20%26%20ECR%20(ap--south--1)-FF9900?logo=amazon-aws&logoColor=white)](terraform/)
+[![Ubuntu](https://img.shields.io/badge/OS-Ubuntu%2024.04%20LTS-E95420?logo=ubuntu&logoColor=white)](terraform/)
 
-> **Software Engineering and Project Management (SEPM) Micro-Project Prototype**  
-> An agile, automated civic issue reporting, intelligent mathematical prioritization, and SLA-driven departmental routing platform for modern smart cities.
+> **DevSecOps Lab CIAP Microproject**  
+> **Student**: Ishan Sudarshan Pavase | **Roll No**: `124BTCS1026` | **Department**: Cyber Security, SAKEC  
+> Complete enterprise DevSecOps lifecycle: Git $\rightarrow$ Docker $\rightarrow$ Jenkins CI/CD $\rightarrow$ SonarQube SAST $\rightarrow$ Trivy Scan $\rightarrow$ AWS ECR $\rightarrow$ Terraform AWS Ubuntu EC2.
+
+---
+
+## 🛡️ DevSecOps Pipeline Architecture
+
+```
+┌─────────────────┐       ┌─────────────────┐       ┌───────────────────────────┐
+│  Developer      │       │     GitHub      │       │   Jenkins CI/CD Pipeline  │
+│  (Ishan Pavase) │ ────> │   Repository    │ ────> │   (Docker Agent on 8081)  │
+│  git push       │       │                 │       │                           │
+└─────────────────┘       └─────────────────┘       └─────────────┬─────────────┘
+                                                                  │
+      ┌───────────────────────────────────────────────────────────┴──────────────────────────────────────────┐
+      │                                                                                                      │
+      ▼                                                                                                      ▼
+┌───────────────┐     ┌───────────────┐     ┌───────────────┐     ┌───────────────┐     ┌────────────────┐   │
+│ 1. Pytest     │ ──> │ 2. SonarQube  │ ──> │ 3. Trivy FS   │ ──> │ 4. Docker     │ ──> │ 5. Trivy Image │   │
+│    20/20 Pass │     │    Gate A     │     │    Secret Scan│     │    Build      │     │    CVE Scan    │   │
+└───────────────┘     └───────────────┘     └───────────────┘     └───────────────┘     └────────────────┘   │
+                                                                                                 │           │
+                                                                                                 ▼           ▼
+                                                                                        ┌────────────────┐   │
+                                                                                        │ 6. Push to ECR │   │
+                                                                                        └────────┬───────┘   │
+                                                                                                 │           │
+                                                                                                 ▼           ▼
+┌────────────────────────────────────────────────────────────────────────┐              ┌────────────────┐   │
+│                 AWS Cloud (Mumbai: ap-south-1)                         │              │ 7. Deploy &    │   │
+│                                                                        │              │    Health Check│ ──┘
+│  ┌─────────────────────────┐     ┌──────────────────────────────────┐  │ <─────────── │  (Port 8000)   │
+│  │    Terraform (IaC)      │     │   Ubuntu 24.04 EC2 (t3.micro)    │  │  docker pull └────────────────┘
+│  │ - VPC (10.20.0.0/16)    │ ──> │ - Docker CLI Engine              │  │
+│  │ - Public Subnet & IGW   │     │ - Pulls image from AWS ECR       │  │
+│  │ - Security Group (Pt 80)│     │ - Runs container: docker run     │  │
+│  └─────────────────────────┘     └────────────────┬─────────────────┘  │
+└───────────────────────────────────────────────────┼────────────────────┘
+                                                    │
+                                                    ▼
+                                     [ Live Web Application ]
+                                        http://<EC2-IP>:80
+```
+
+---
+
+## 📑 DevSecOps Requirements & Verification Matrix
+
+| # | Requirement | Status | Technology Used | Implementation Details |
+|---|---|:---:|---|---|
+| **1** | **Application Ready** | ✅ **Passed** | Python 3, Flask, SQLite | Civic issue prioritization, SLA routing, dynamic dashboard. |
+| **2** | **GitHub Repository** | ✅ **Passed** | Git / GitHub | Public source control at `storm756/SEP_MICROPROJECT`. |
+| **3** | **Dockerize Project** | ✅ **Passed** | Docker (Single-Stage) | Lightweight `python:3.12-slim` image, Gunicorn on Port 8000. |
+| **4** | **Trivy Image Scan** | ✅ **Passed** | Aqua Security Trivy | Container image vulnerability scan generating reports. |
+| **5** | **SonarQube SAST** | ✅ **Passed** | SonarQube 9.9 LTS | Static code security audit: Rating A, 0 Bugs, 0 Vulnerabilities. |
+| **6** | **Jenkins CI/CD** | ✅ **Passed** | Jenkins Declarative Pipeline | 7-stage automated build, test, security gate, and deploy. |
+| **7** | **AWS EC2 (Ubuntu) + ECR**| ✅ **Passed** | Terraform, AWS ECR, EC2 | Ubuntu 24.04 `t3.micro`, image pulled from ECR, live on Port 80. |
+
+---
+
+## 🔍 Detailed Component Explanation (Viva Guide)
+
+### 1. Docker Containerization (`Dockerfile`)
+* **Base Image**: `python:3.12-slim` (standard Debian-based Python image).
+* **Workdir**: `/app` folder inside the container.
+* **Dependencies**: Installed from `requirements.txt` via `pip install --no-cache-dir`.
+* **Port**: `EXPOSE 8000` (Gunicorn web server listens on internal port 8000).
+* **Command**: `CMD ["gunicorn", "--bind", "0.0.0.0:8000", "wsgi:app"]`.
+
+### 2. Jenkins CI/CD Pipeline (`Jenkinsfile`)
+* **Continuous Integration (CI)**:
+  * Automatically checks out code from GitHub.
+  * Runs 20 unit tests with `pytest` (99% coverage).
+  * Executes SAST analysis with `SonarQube` (Rating A).
+  * Scans repository for leaked passwords and secrets with `Trivy fs`.
+* **Continuous Delivery (CD)**:
+  * Builds the Docker image locally.
+  * Scans the container image for OS-level vulnerabilities with `Trivy image`.
+  * Authenticates with AWS STS and pushes the image to **AWS ECR**.
+  * Deploys the container and verifies health via HTTP status checks.
+
+### 3. AWS ECR (Elastic Container Registry)
+* **What is it?**: AWS's secure, private container registry hosted in Mumbai (`ap-south-1`).
+* **Registry URI**: `318724431625.dkr.ecr.ap-south-1.amazonaws.com/cityserve:latest`.
+* **Why ECR over Docker Hub?**: Private storage, no rate limits, hosted in the same cloud region as EC2 for fast pull speeds, integrated with IAM security.
+
+### 4. Terraform Infrastructure as Code (`terraform/`)
+* **Networking (`networking.tf`)**: Provisions an isolated Virtual Private Cloud (`10.20.0.0/16`), a public subnet (`10.20.1.0/24`), and an Internet Gateway with public routing.
+* **Firewall (`security_group.tf`)**: Opens inbound TCP Port 80 (HTTP) to `0.0.0.0/0` and allows all outbound traffic.
+* **Server (`ec2.tf`)**: Launches an **Ubuntu 24.04 LTS** `t3.micro` instance (Free Tier eligible) with encrypted gp3 storage.
+* **Bootstrap (`user_data.sh.tftpl`)**: Automatically installs Docker and AWS CLI v2, authenticates with ECR, pulls the pre-built image, and runs it on port 80 (`-p 80:8000`).
 
 ---
 

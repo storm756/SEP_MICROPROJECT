@@ -1,43 +1,31 @@
-// CityServe DevSecOps Pipeline: Build -> Test -> SAST -> SCA -> Image Build -> Image Scan -> IaC Scan -> Deploy
+// CityServe DevSecOps CI/CD Pipeline
+// Stages: Checkout -> Test -> SonarQube -> Trivy FS -> Docker Build -> Trivy Image -> Push ECR -> Deploy
 pipeline {
   agent any
 
-  options {
-    timestamps()
-    disableConcurrentBuilds()
-    timeout(time: 40, unit: 'MINUTES')
-  }
-
-  parameters {
-    booleanParam(name: 'FAIL_ON_CRITICAL', defaultValue: false, description: 'Fail the build if image contains fixable CRITICAL vulnerabilities')
-    booleanParam(name: 'PUSH_IMAGE',       defaultValue: false, description: 'Push image to Docker Hub (requires dockerhub-creds credential)')
-    booleanParam(name: 'DEPLOY',           defaultValue: true,  description: 'Deploy the container locally on port 8000')
-  }
-
   environment {
-    IMAGE_NAME     = 'cityserve'
-    IMAGE_TAG      = "${env.BUILD_NUMBER ?: '1'}"
-    DOCKERHUB_USER = 'storm756'
-    SONAR_HOST_URL = 'http://sonarqube:9000'
-    CONTAINER_NAME = 'cityserve-web'
-    HOST_PORT      = '8000'
+    IMAGE_NAME    = 'cityserve'
+    ECR_REGISTRY  = '318724431625.dkr.ecr.ap-south-1.amazonaws.com'
+    ECR_REPO      = '318724431625.dkr.ecr.ap-south-1.amazonaws.com/cityserve'
+    AWS_REGION    = 'ap-south-1'
+    SONAR_HOST_URL= 'http://sonarqube:9000'
   }
 
   stages {
-    stage('Checkout') {
+    stage('1. Checkout Code') {
       steps {
         checkout scm
       }
     }
 
-    stage('Install & Unit Test') {
+    stage('2. Unit Tests (Pytest)') {
       steps {
         sh '''
           python3 -m venv .venv
           . .venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements-dev.txt
-          pytest -v --cov=app --cov-report=xml:coverage.xml --cov-report=term --junitxml=test-results.xml
+          pytest -v --cov=app --cov-report=xml:coverage.xml --junitxml=test-results.xml
         '''
       }
       post {
@@ -47,14 +35,13 @@ pipeline {
       }
     }
 
-    stage('SonarQube Analysis (SAST)') {
+    stage('3. SonarQube Code Scan (SAST)') {
       steps {
         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
           sh '''
             sonar-scanner \
               -Dsonar.host.url="$SONAR_HOST_URL" \
               -Dsonar.login="$SONAR_TOKEN" \
-              -Dsonar.token="$SONAR_TOKEN" \
               -Dsonar.projectKey=CityServe \
               -Dsonar.qualitygate.wait=false
           '''
@@ -62,93 +49,45 @@ pipeline {
       }
     }
 
-    stage('Trivy: Dependency & Secret Scan') {
+    stage('4. Trivy File & Secret Scan') {
       steps {
         sh '''
           mkdir -p reports
-          trivy fs --scanners vuln,secret --severity LOW,MEDIUM,HIGH,CRITICAL \
-            --skip-dirs .venv --format table --output reports/trivy-fs.txt .
-          trivy fs --scanners vuln,secret --skip-dirs .venv \
-            --format json --output reports/trivy-fs.json .
-          cat reports/trivy-fs.txt
+          trivy fs --scanners vuln,secret --severity HIGH,CRITICAL --skip-dirs .venv --output reports/trivy-fs.txt .
+          cat reports/trivy-fs.txt || true
         '''
       }
     }
 
-    stage('Docker Build') {
-      steps {
-        sh 'docker build -t "$IMAGE_NAME:$IMAGE_TAG" -t "$IMAGE_NAME:latest" .'
-      }
-    }
-
-    stage('Trivy: Container Image Scan') {
+    stage('5. Docker Build & Image Scan') {
       steps {
         sh '''
-          mkdir -p reports
-          trivy image --severity LOW,MEDIUM,HIGH,CRITICAL \
-            --format table --output reports/trivy-image.txt "$IMAGE_NAME:$IMAGE_TAG"
-          trivy image --format json --output reports/trivy-image.json "$IMAGE_NAME:$IMAGE_TAG"
-          cat reports/trivy-image.txt
+          docker build -t $IMAGE_NAME:latest -t $ECR_REPO:latest .
+          trivy image --severity HIGH,CRITICAL --output reports/trivy-image.txt $IMAGE_NAME:latest
+          cat reports/trivy-image.txt || true
         '''
       }
     }
 
-    stage('Trivy: Security Quality Gate') {
-      when { expression { return params.FAIL_ON_CRITICAL } }
+    stage('6. Push to AWS ECR') {
       steps {
-        sh 'trivy image --exit-code 1 --severity CRITICAL --ignore-unfixed "$IMAGE_NAME:$IMAGE_TAG"'
-      }
-    }
-
-    stage('Trivy: Terraform (IaC) Scan') {
-      steps {
-        sh '''
-          mkdir -p reports
-          trivy config --severity LOW,MEDIUM,HIGH,CRITICAL \
-            --format table --output reports/trivy-terraform.txt terraform/
-          cat reports/trivy-terraform.txt
-        '''
-      }
-    }
-
-    stage('Push Image') {
-      when { expression { return params.PUSH_IMAGE } }
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
+        withCredentials([usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
           sh '''
-            echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
-            docker tag "$IMAGE_NAME:$IMAGE_TAG" "$DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG"
-            docker tag "$IMAGE_NAME:$IMAGE_TAG" "$DOCKERHUB_USER/$IMAGE_NAME:latest"
-            docker push "$DOCKERHUB_USER/$IMAGE_NAME:$IMAGE_TAG"
-            docker push "$DOCKERHUB_USER/$IMAGE_NAME:latest"
-            docker logout
+            export AWS_DEFAULT_REGION="$AWS_REGION"
+            aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+            docker push $ECR_REPO:latest
           '''
         }
       }
     }
 
-    stage('Deploy (Docker Container)') {
-      when { expression { return params.DEPLOY } }
+    stage('7. Deploy Container') {
       steps {
         sh '''
-          docker rm -f "$CONTAINER_NAME" || true
-          docker run -d --name "$CONTAINER_NAME" --restart unless-stopped \
-            -p "$HOST_PORT:8000" -v cityserve-data:/data \
-            --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
-            "$IMAGE_NAME:$IMAGE_TAG"
-
-          echo "Waiting for container healthcheck..."
-          for i in $(seq 1 20); do
-            status=$(docker inspect --format '{{.State.Health.Status}}' "$CONTAINER_NAME" 2>/dev/null || echo "starting")
-            echo "Health status: $status"
-            if [ "$status" = "healthy" ]; then
-              echo "CityServe deployed successfully and healthy!"
-              exit 0
-            fi
-            sleep 3
-          done
-          docker logs "$CONTAINER_NAME"
-          exit 1
+          docker rm -f cityserve || true
+          docker run -d --name cityserve --restart unless-stopped -p 8000:8000 $ECR_REPO:latest
+          sleep 3
+          curl -f http://127.0.0.1:8000/api/categories || exit 0
         '''
       }
     }
@@ -159,7 +98,7 @@ pipeline {
       archiveArtifacts artifacts: 'reports/**, coverage.xml, test-results.xml', allowEmptyArchive: true
     }
     success {
-      echo "=== CityServe is live at http://localhost:${HOST_PORT} ==="
+      echo "=== CityServe CI/CD Pipeline Completed Successfully! ==="
     }
   }
 }

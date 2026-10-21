@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "instance_type" {
   description = "EC2 instance type (Free Tier eligible)"
   type        = string
-  default     = "t2.micro"
+  default     = "t3.micro"
 }
 
 variable "name_prefix" {
@@ -43,7 +43,27 @@ variable "ssh_cidr" {
 variable "docker_image" {
   description = "Docker image repository and tag to deploy"
   type        = string
-  default     = "storm756/cityserve:latest"
+  default     = "318724431625.dkr.ecr.ap-south-1.amazonaws.com/cityserve:latest"
+}
+
+variable "ecr_registry" {
+  description = "AWS ECR registry domain"
+  type        = string
+  default     = "318724431625.dkr.ecr.ap-south-1.amazonaws.com"
+}
+
+variable "aws_access_key_id" {
+  description = "AWS Access Key ID for ECR authentication"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "aws_secret_access_key" {
+  description = "AWS Secret Access Key for ECR authentication"
+  type        = string
+  default     = ""
+  sensitive   = true
 }
 
 variable "ami_id" {

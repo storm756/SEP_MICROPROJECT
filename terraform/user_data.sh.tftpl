@@ -1,35 +1,30 @@
 #!/bin/bash
 set -euo pipefail
 
-# System update, Docker and Git installation
-if command -v dnf &>/dev/null; then
-    dnf update -y
-    dnf install -y docker git
-else
-    apt-get update -y
-    apt-get install -y docker.io git
-fi
+# Step 1: Install Docker and AWS CLI v2 on Ubuntu
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -y
+apt-get install -y docker.io curl unzip
+curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+unzip -q /tmp/awscliv2.zip -d /tmp
+/tmp/aws/install --update
+rm -rf /tmp/aws /tmp/awscliv2.zip
 
-# Enable and start Docker service
+# Step 2: Start Docker service
 systemctl enable --now docker
 
-# Deploy CityServe container (via registry or direct Git clone fallback)
-if docker pull ${docker_image} 2>/dev/null; then
-    docker run -d \
-      --name cityserve \
-      --restart unless-stopped \
-      -p 80:8000 \
-      -v cityserve_data:/data \
-      ${docker_image}
-else
-    cd /opt
-    git clone https://github.com/storm756/SEP_MICROPROJECT.git
-    cd SEP_MICROPROJECT
-    docker build -t cityserve:latest .
-    docker run -d \
-      --name cityserve \
-      --restart unless-stopped \
-      -p 80:8000 \
-      -v cityserve_data:/data \
-      cityserve:latest
-fi
+# Step 3: Login to AWS ECR
+export AWS_ACCESS_KEY_ID="${aws_access_key_id}"
+export AWS_SECRET_ACCESS_KEY="${aws_secret_access_key}"
+export AWS_DEFAULT_REGION="${aws_region}"
+aws ecr get-login-password --region "${aws_region}" | docker login --username AWS --password-stdin "${ecr_registry}"
+
+# Step 4: Pull pre-built image from AWS ECR
+docker pull "${docker_image}"
+
+# Step 5: Run container on port 80
+docker run -d \
+  --name cityserve \
+  --restart unless-stopped \
+  -p 80:8000 \
+  "${docker_image}"

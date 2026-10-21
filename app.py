@@ -58,6 +58,7 @@ def create_app(db_path=None):
         return d
 
     @app.get("/")
+    @app.get("/index.html")
     def index():
         return send_from_directory("static", "index.html")
 
